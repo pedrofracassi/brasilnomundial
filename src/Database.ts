@@ -7,11 +7,20 @@ export interface Player {
   summonerId: string,
   createdAt: Date,
   updatedAt: Date
+  lolprosId: string
+}
+
+export interface Game {
+  id: number,
+  ended: boolean,
+  tweetId: string
 }
 
 export default class Database {
   sequelize: Sequelize
   playerModel: ModelCtor<Model>
+  gameModel: ModelCtor<Model>
+  settings: ModelCtor<Model>
 
   constructor () {
     this.sequelize = new Sequelize({
@@ -22,10 +31,90 @@ export default class Database {
     this.playerModel = this.sequelize.define('Player', {
       name: DataTypes.STRING,
       summonerName: DataTypes.STRING,
-      summonerId: DataTypes.STRING
+      summonerId: DataTypes.STRING,
+      lolprosId: DataTypes.STRING,
     }, { underscored: true } )
     
+    this.settings = this.sequelize.define('Settings', {
+      key: {
+        type: DataTypes.STRING,
+        primaryKey: true
+      },
+      value: {
+        type: DataTypes.STRING
+      }
+    }, { underscored: true })
+
+    this.gameModel = this.sequelize.define('Game', {
+      id: {
+        type: DataTypes.BIGINT,
+        primaryKey: true
+      },
+      ended: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+      },
+      tweetId: DataTypes.STRING
+    }, { underscored: true })
+
     this.sequelize.sync()
+  }
+
+  addGame (gameId: number, tweetId: string) {
+    return this.gameModel.create({
+      id: gameId,
+      tweetId: tweetId
+    })
+  }
+
+  async hasGameBeenTweeted (gameId: number) {
+    const result = await this.gameModel.findOne({
+      where: {
+        id: gameId
+      }
+    })
+    return !!result
+  }
+
+  setGameFinished (gameId: number) {
+    return this.gameModel.update({
+      ended: true
+    }, {
+      where: {
+        id: gameId
+      }
+    })
+  }
+
+  async getUnfinishedGames () {
+    return await this.gameModel.findAll({
+      where: {
+        ended: false
+      }
+    }).then(games => games.map(g => g.toJSON() as Game))
+  }
+
+  async getGameTweetId (gameId: number) {
+    return await this.gameModel.findOne({
+      where: {
+        id: gameId
+      }
+    }).then(g => g!.getDataValue('tweetId'))
+  }
+
+  updateSetting (key: string, value: string): Promise<any> {
+    return this.settings.upsert({
+      key: key,
+      value: value
+    })
+  }
+
+  getSetting (key: string): Promise<string> {
+    return this.settings.findOne({
+      where: {
+        key: key
+      }
+    }).then(res => res ? res.getDataValue('value') : null)
   }
 
   getAllPlayers (): Promise<Array<Player>> {
