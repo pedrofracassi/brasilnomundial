@@ -25,15 +25,15 @@ export default class Database {
 
   constructor () {
     this.sequelize = process.env.DATABASE_HOST ? new Sequelize({
-      dialect: 'sqlite',
-      storage: 'db.sqlite',
-      logging: false
-    }) : new Sequelize({
       dialect: 'postgres',
       host: process.env.DATABASE_HOST || 'db',
       username: process.env.DATABASE_USERNAME || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'pass',
       database: process.env.DATABASE_DB || 'brasilnomundial',
+      logging: false
+    }) : new Sequelize({
+      dialect: 'sqlite',
+      storage: 'db.sqlite',
       logging: false
     })
 
