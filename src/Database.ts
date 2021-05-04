@@ -8,6 +8,7 @@ export interface Player {
   createdAt: Date,
   updatedAt: Date
   lolprosId: string
+  lastTrackingTheProsRanking: number
 }
 
 export interface Game {
@@ -26,6 +27,7 @@ export default class Database {
     this.sequelize = new Sequelize({
       dialect: 'sqlite',
       storage: 'db.sqlite',
+      logging: false
     })
 
     this.playerModel = this.sequelize.define('Player', {
@@ -33,6 +35,7 @@ export default class Database {
       summonerName: DataTypes.STRING,
       summonerId: DataTypes.STRING,
       lolprosId: DataTypes.STRING,
+      lastTrackingTheProsRanking: DataTypes.INTEGER
     }, { underscored: true } )
     
     this.settings = this.sequelize.define('Settings', {
@@ -58,6 +61,24 @@ export default class Database {
     }, { underscored: true })
 
     this.sequelize.sync()
+  }
+
+  getLastTTPRank (playerId: number) {
+    return this.playerModel.findOne({
+      where: {
+        id: playerId
+      }
+    }).then(res => res!.getDataValue('lastTrackingTheProsRanking'))
+  }
+
+  setLastTTPRank (playerId: number, rank: number) {
+    return this.playerModel.update({
+      lastTrackingTheProsRanking: rank
+    }, {
+      where: {
+        id: playerId
+      }
+    })
   }
 
   addGame (gameId: number, tweetId: string) {

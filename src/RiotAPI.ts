@@ -149,7 +149,12 @@ export default class RiotAPI {
     }
   }
 
-  getMatch (matchId: number) {
-    return this.axios.get(`/lol/match/v4/matches/${matchId}`).then(res => res.data)
+  async getMatch (matchId: number): Promise<null | RiotMatch> {
+    try {
+      const response = await this.axios.get(`/lol/match/v4/matches/${matchId}`).then(res => res.data)
+      return response
+    } catch (e) {
+      return null
+    }
   }
 }
