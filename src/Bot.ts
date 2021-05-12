@@ -90,7 +90,7 @@ export default class Bot {
   }
 
   async tweetRankingChanges () {
-    if (process.env.DISABLE_RANKING_TWEETS) return
+    if (!!process.env.DISABLE_RANKING_TWEETS) return
     console.log(`\nChecking for changes in player's TTP rankings`)
 
     for (const p of this.players) {
